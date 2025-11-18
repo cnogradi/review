@@ -1,0 +1,145 @@
+.preview-builder h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.preview-stats {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: var(--surface);
+  border-radius: 8px;
+  min-width: 150px;
+  border: 1px solid var(--border);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.preview-container {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.preview-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.preview-content h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 1rem;
+}
+
+.preview-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.preview-content h3 {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.preview-content p {
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.preview-content ul,
+.preview-content ol {
+  margin-left: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.preview-content li {
+  margin-bottom: 0.5rem;
+}
+
+.preview-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.preview-content code {
+  background-color: var(--background);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.preview-content pre {
+  background-color: var(--background);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.preview-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .preview-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .stat {
+    min-width: 100%;
+  }
+
+  .preview-container {
+    padding: 1rem;
+    max-height: 500px;
+  }
+
+  .preview-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .preview-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .preview-content h3 {
+    font-size: 1.1rem;
+  }
+}
