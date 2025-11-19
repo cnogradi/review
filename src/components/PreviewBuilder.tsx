@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { TrainingMaterial } from '../data/sampleMaterials';
+import { TrainingMaterial, OutlineItem } from '../data/sampleMaterials';
+import { extractConceptContent } from '../utils/contentExtractor';
 import './PreviewBuilder.css';
 
 interface SelectedConcept {
@@ -24,36 +25,25 @@ function PreviewBuilder({ materials, selectedConcepts, onBack, onReset }: Previe
       const material = materials.find(m => m.id === concept.materialId);
       const outlineItem = material?.outline.find(o => o.id === concept.outlineItemId);
       
-      if (outlineItem) {
+      if (outlineItem && material) {
         if (!acc[outlineItem.title]) {
           acc[outlineItem.title] = [];
         }
         acc[outlineItem.title].push({
           concept: concept.concept,
-          material: material!,
+          material: material,
           outlineItem
         });
       }
       return acc;
-    }, {} as Record<string, Array<{concept: string, material: TrainingMaterial, outlineItem: any}>>);
+    }, {} as Record<string, Array<{concept: string, material: TrainingMaterial, outlineItem: OutlineItem}>>);
 
     Object.entries(groupedConcepts).forEach(([section, items]) => {
       content += `## ${section}\n\n`;
       
-      items.forEach(({ concept, material }) => {
-        content += `### ${concept}\n\n`;
-        
-        const conceptRegex = new RegExp(`###\\s+${concept}[\\s\\S]*?(?=###|##|$)`, 'i');
-        const match = material.content.match(conceptRegex);
-        
-        if (match) {
-          const conceptContent = match[0]
-            .replace(new RegExp(`###\\s+${concept}`, 'i'), '')
-            .trim();
-          content += conceptContent + '\n\n';
-        } else {
-          content += `*Content for ${concept} from ${material.title}*\n\n`;
-        }
+      items.forEach(({ concept, material, outlineItem }) => {
+        const conceptContent = extractConceptContent(material, outlineItem, concept);
+        content += conceptContent + '\n\n';
       });
     });
 

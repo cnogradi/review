@@ -30,7 +30,7 @@ function ConceptSelector({
   );
 
   const toggleConcept = (materialId: string, itemId: string, concept: string) => {
-    const key = `${materialId}-${itemId}-${concept}`;
+    const key = `${materialId}|||${itemId}|||${concept}`;
     const newSelected = new Set(selected);
     if (newSelected.has(key)) {
       newSelected.delete(key);
@@ -42,8 +42,8 @@ function ConceptSelector({
 
   const handleContinue = () => {
     const concepts: SelectedConcept[] = Array.from(selected).map(key => {
-      const [materialId, itemId] = key.split('-');
-      return { materialId, outlineItemId: itemId, concept: key.substring(materialId.length + itemId.length + 2) };
+      const [materialId, itemId, concept] = key.split('|||');
+      return { materialId, outlineItemId: itemId, concept };
     });
     onConceptsSelected(concepts);
   };
@@ -66,7 +66,7 @@ function ConceptSelector({
 
             <div className="concepts-list">
               {item.concepts.map((concept, idx) => {
-                const key = `${material.id}-${item.id}-${concept}`;
+                const key = `${material.id}|||${item.id}|||${concept}`;
                 const isSelected = selected.has(key);
                 return (
                   <div
