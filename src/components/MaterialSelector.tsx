@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { TrainingMaterial } from '../data/sampleMaterials';
+import PreviewPanel from './PreviewPanel';
+import { extractOutline } from '../utils/contentExtractor';
 import './MaterialSelector.css';
 
 interface MaterialSelectorProps {
@@ -9,6 +11,7 @@ interface MaterialSelectorProps {
 
 function MaterialSelector({ materials, onMaterialsSelected }: MaterialSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [previewMaterial, setPreviewMaterial] = useState<TrainingMaterial | null>(null);
 
   const toggleMaterial = (materialId: string) => {
     const newSelected = new Set(selected);
@@ -32,6 +35,7 @@ function MaterialSelector({ materials, onMaterialsSelected }: MaterialSelectorPr
       <p className="description">
         Choose the source materials you want to combine into a single training deck.
         You can select multiple materials to compare and merge their content.
+        Click on a material card to see its outline preview.
       </p>
 
       <div className="materials-grid">
@@ -55,9 +59,26 @@ function MaterialSelector({ materials, onMaterialsSelected }: MaterialSelectorPr
               <span>{material.outline.length} sections</span>
               <span>{material.outline.reduce((acc, item) => acc + item.concepts.length, 0)} concepts</span>
             </div>
+            <button
+              className="preview-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewMaterial(material);
+              }}
+            >
+              Preview Outline
+            </button>
           </div>
         ))}
       </div>
+
+      <PreviewPanel
+        isOpen={previewMaterial !== null}
+        onClose={() => setPreviewMaterial(null)}
+        title={previewMaterial?.title || ''}
+        content={previewMaterial ? extractOutline(previewMaterial) : ''}
+        position="left"
+      />
 
       <div className="actions">
         <button

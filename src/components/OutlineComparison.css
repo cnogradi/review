@@ -95,6 +95,24 @@
   border: 1px solid var(--border);
 }
 
+.preview-btn-small {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.preview-btn-small:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+  border-color: var(--primary-color);
+}
+
 @media (max-width: 768px) {
   .outlines-container {
     grid-template-columns: 1fr;

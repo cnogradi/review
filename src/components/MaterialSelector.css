@@ -64,6 +64,24 @@
   color: var(--text-secondary);
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.preview-btn {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-btn:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+  border-color: var(--primary-color);
 }
 
 @media (max-width: 768px) {

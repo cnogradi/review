@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { sampleMaterials, TrainingMaterial, OutlineItem } from './data/sampleMaterials';
+import { sampleMaterials } from './data/sampleMaterials';
 import MaterialSelector from './components/MaterialSelector';
 import OutlineComparison from './components/OutlineComparison';
 import ConceptSelector from './components/ConceptSelector';

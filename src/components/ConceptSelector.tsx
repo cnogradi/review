@@ -42,7 +42,7 @@ function ConceptSelector({
 
   const handleContinue = () => {
     const concepts: SelectedConcept[] = Array.from(selected).map(key => {
-      const [materialId, itemId, concept] = key.split('-');
+      const [materialId, itemId] = key.split('-');
       return { materialId, outlineItemId: itemId, concept: key.substring(materialId.length + itemId.length + 2) };
     });
     onConceptsSelected(concepts);

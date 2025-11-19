@@ -74,45 +74,50 @@ function PreviewBuilder({ materials, selectedConcepts, onBack, onReset }: Previe
 
   return (
     <div className="preview-builder">
-      <h2>Consolidated Training Material Preview</h2>
-      <p className="description">
-        Review the consolidated training material. You can export it as markdown or go back to make adjustments.
-      </p>
+      <div className="preview-builder-left">
+        <h2>Consolidated Training Material</h2>
+        <p className="description">
+          Review the consolidated training material on the right. You can export it as markdown or go back to make adjustments.
+        </p>
 
-      <div className="preview-stats">
-        <div className="stat">
-          <span className="stat-value">{materials.length}</span>
-          <span className="stat-label">Source Materials</span>
+        <div className="preview-stats">
+          <div className="stat">
+            <span className="stat-value">{materials.length}</span>
+            <span className="stat-label">Source Materials</span>
+          </div>
+          <div className="stat">
+            <span className="stat-value">{selectedConcepts.length}</span>
+            <span className="stat-label">Selected Concepts</span>
+          </div>
+          <div className="stat">
+            <span className="stat-value">{Object.keys(selectedConcepts.reduce((acc, c) => {
+              acc[c.outlineItemId] = true;
+              return acc;
+            }, {} as Record<string, boolean>)).length}</span>
+            <span className="stat-label">Sections</span>
+          </div>
         </div>
-        <div className="stat">
-          <span className="stat-value">{selectedConcepts.length}</span>
-          <span className="stat-label">Selected Concepts</span>
-        </div>
-        <div className="stat">
-          <span className="stat-value">{Object.keys(selectedConcepts.reduce((acc, c) => {
-            acc[c.outlineItemId] = true;
-            return acc;
-          }, {} as Record<string, boolean>)).length}</span>
-          <span className="stat-label">Sections</span>
+
+        <div className="actions-vertical">
+          <button className="btn-secondary" onClick={onBack}>
+            ← Back to Concept Selection
+          </button>
+          <button className="btn-secondary" onClick={handleExport}>
+            📥 Export as Markdown
+          </button>
+          <button className="btn-primary" onClick={onReset}>
+            🔄 Start New Consolidation
+          </button>
         </div>
       </div>
 
-      <div className="preview-container">
-        <div className="preview-content">
+      <div className="preview-builder-right">
+        <div className="preview-header">
+          <h3>Document Preview</h3>
+        </div>
+        <div className="preview-content-scroll">
           <ReactMarkdown>{consolidatedContent}</ReactMarkdown>
         </div>
-      </div>
-
-      <div className="actions">
-        <button className="btn-secondary" onClick={onBack}>
-          Back to Concept Selection
-        </button>
-        <button className="btn-secondary" onClick={handleExport}>
-          Export as Markdown
-        </button>
-        <button className="btn-primary" onClick={onReset}>
-          Start New Consolidation
-        </button>
       </div>
     </div>
   );

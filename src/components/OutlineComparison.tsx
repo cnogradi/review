@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { TrainingMaterial } from '../data/sampleMaterials';
+import { TrainingMaterial, OutlineItem } from '../data/sampleMaterials';
+import PreviewPanel from './PreviewPanel';
+import { generateConceptsPreview } from '../utils/contentExtractor';
 import './OutlineComparison.css';
 
 interface OutlineComparisonProps {
@@ -8,8 +10,14 @@ interface OutlineComparisonProps {
   onBack: () => void;
 }
 
+interface PreviewState {
+  material: TrainingMaterial;
+  outlineItem: OutlineItem;
+}
+
 function OutlineComparison({ materials, onOutlineSelected, onBack }: OutlineComparisonProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [preview, setPreview] = useState<PreviewState | null>(null);
 
   const toggleOutlineItem = (itemId: string) => {
     const newSelected = new Set(selected);
@@ -32,7 +40,7 @@ function OutlineComparison({ materials, onOutlineSelected, onBack }: OutlineComp
       <h2>Compare and Select Outline Items</h2>
       <p className="description">
         Review the outlines from selected materials and choose which sections to include
-        in your consolidated training deck.
+        in your consolidated training deck. Click "Preview" to see the concepts and their content.
       </p>
 
       <div className="outlines-container">
@@ -64,12 +72,29 @@ function OutlineComparison({ materials, onOutlineSelected, onBack }: OutlineComp
                       <span key={idx} className="concept-tag">{concept}</span>
                     ))}
                   </div>
+                  <button
+                    className="preview-btn-small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreview({ material, outlineItem: item });
+                    }}
+                  >
+                    Preview
+                  </button>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      <PreviewPanel
+        isOpen={preview !== null}
+        onClose={() => setPreview(null)}
+        title={preview ? `${preview.outlineItem.title}` : ''}
+        content={preview ? generateConceptsPreview(preview.material, preview.outlineItem) : ''}
+        position="left"
+      />
 
       <div className="actions">
         <button className="btn-secondary" onClick={onBack}>
