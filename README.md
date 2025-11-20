@@ -81,3 +81,67 @@ These demonstrate the consolidation workflow with realistic engineering training
 - Custom slide template generation
 - Export to multiple formats (PPTX, PDF, DOCX)
 - Collaborative editing features
+
+## Document Processing Pipeline
+
+I have implemented the document processing pipeline and integrated it with the frontend application.
+
+### Changes
+
+#### ETL Pipeline
+- **`etl/process_docs.py`**: Main script to process PPTX, PDF, and DOCX files.
+    - Extracts text and structure.
+    - Extracts slide images (for PPTX).
+    - Uploads to S3 (or local output in dry-run).
+- **`etl/requirements.txt`**: Python dependencies.
+
+#### Frontend
+- **`src/services/materialService.ts`**: New service to fetch materials from S3 if `VITE_S3_BUCKET_URL` is configured.
+- **`src/App.tsx`**: Updated to use `materialService` for data loading.
+
+### Verification
+
+#### Prerequisites
+1.  Install Python 3.8+.
+2.  **System Dependencies** (for slide generation):
+    -   **Linux**:
+        -   **LibreOffice**: `sudo apt-get install libreoffice`
+        -   **Poppler**: `sudo apt-get install poppler-utils`
+    -   **Windows**:
+        -   **LibreOffice**: Install from [libreoffice.org](https://www.libreoffice.org/). Ensure `soffice.exe` is in your PATH or default install location.
+        -   **Poppler**: Download binary release (e.g., from [github.com/oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows)), extract, and add the `bin` folder to your system PATH.
+3.  Install dependencies:
+    ```bash
+    pip install -r etl/requirements.txt
+    ```
+
+#### Running the ETL Pipeline
+1.  **Generate Test Data** (Optional):
+    ```bash
+    python etl/generate_test_data.py
+    ```
+    This creates `test_docs/test_presentation.pptx`.
+
+2.  **Dry Run** (Local Verification):
+    ```bash
+    python etl/process_docs.py --source-dir ./test_docs --bucket my-test-bucket --dry-run
+    ```
+    - Check `output/` directory for `index.json` and processed modules.
+
+3.  **S3 Upload** (Production):
+    ```bash
+    python etl/process_docs.py --source-dir ./real_docs --bucket my-real-bucket
+    ```
+
+#### Running the Frontend
+1.  **Default Mode** (Uses sample data):
+    ```bash
+    npm run dev
+    ```
+2.  **S3 Mode**:
+    - Create `.env.local` with `VITE_S3_BUCKET_URL=https://my-bucket.s3.amazonaws.com/prefix`
+    - Run `npm run dev`.
+
+### Next Steps
+- Configure the actual S3 bucket and CORS settings.
+- Set up the `VITE_S3_BUCKET_URL` in the deployment environment.

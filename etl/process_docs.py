@@ -27,6 +27,42 @@ def extract_concepts(text: str) -> List[str]:
     concepts = [w.strip('.,()') for w in words if len(w) > 5 and w[0].isupper()]
     return list(set(concepts))[:5]  # Return top 5 unique concepts
 
+def convert_pptx_to_pdf(pptx_path: Path, output_dir: Path) -> Path:
+    """Converts PPTX to PDF using LibreOffice. Returns path to generated PDF."""
+    import subprocess
+    
+    # Check for libreoffice or soffice
+    soffice = shutil.which('soffice') or shutil.which('libreoffice')
+    if not soffice:
+        # On Windows, it might be in standard paths but not in PATH
+        if os.name == 'nt':
+            possible_paths = [
+                r"C:\Program Files\LibreOffice\program\soffice.exe",
+                r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"
+            ]
+            for p in possible_paths:
+                if os.path.exists(p):
+                    soffice = p
+                    break
+    
+    if not soffice:
+        raise FileNotFoundError("LibreOffice (soffice) not found. Please install LibreOffice.")
+
+    # Run conversion
+    # --headless --convert-to pdf --outdir <dir> <file>
+    cmd = [
+        soffice,
+        '--headless',
+        '--convert-to', 'pdf',
+        '--outdir', str(output_dir),
+        str(pptx_path)
+    ]
+    
+    subprocess.run(cmd, check=True, capture_output=True)
+    
+    pdf_name = pptx_path.with_suffix('.pdf').name
+    return output_dir / pdf_name
+
 def process_pptx(file_path: Path, output_dir: Path) -> Dict[str, Any]:
     prs = Presentation(file_path)
     slides_data = []
@@ -34,12 +70,45 @@ def process_pptx(file_path: Path, output_dir: Path) -> Dict[str, Any]:
     images_dir.mkdir(parents=True, exist_ok=True)
 
     full_text = []
+    
+    # Try to generate slide previews using LibreOffice -> PDF -> Images
+    slide_images = {}
+    try:
+        from pdf2image import convert_from_path
+        
+        # Create a temp dir for the PDF
+        temp_pdf_dir = output_dir / 'temp_pdf'
+        temp_pdf_dir.mkdir(exist_ok=True)
+        
+        try:
+            print(f"Converting {file_path.name} to PDF for previews...")
+            pdf_path = convert_pptx_to_pdf(file_path, temp_pdf_dir)
+            
+            print("Converting PDF to images...")
+            # Convert PDF to images
+            images = convert_from_path(str(pdf_path))
+            
+            for i, image in enumerate(images):
+                image_filename = f"slide_{i+1}.jpg"
+                image_path = images_dir / image_filename
+                image.save(image_path, 'JPEG')
+                slide_images[i] = f"images/{image_filename}"
+                
+        except Exception as e:
+            print(f"Warning: Could not generate slide previews via LibreOffice: {e}")
+            print("Ensure LibreOffice and poppler-utils are installed.")
+        finally:
+            if temp_pdf_dir.exists():
+                shutil.rmtree(temp_pdf_dir)
+                
+    except ImportError:
+        print("Warning: pdf2image not installed. Skipping slide preview generation.")
 
     for i, slide in enumerate(prs.slides):
         slide_text = []
         slide_title = f"Slide {i+1}"
         
-        # Extract text and title
+        # Extract text and title using python-pptx (reliable for text)
         for shape in slide.shapes:
             if hasattr(shape, "text"):
                 text = shape.text.strip()
@@ -48,26 +117,24 @@ def process_pptx(file_path: Path, output_dir: Path) -> Dict[str, Any]:
                     if shape == slide.shapes.title:
                         slide_title = text
 
-        # Save slide preview (placeholder logic as python-pptx doesn't render images directly)
-        # In a real env with LibreOffice or similar, we could convert to PDF then to Image.
-        # For now, we will try to extract images *embedded* in the slide as assets.
-        # OR, we can just skip actual preview generation for the slide itself if we can't render it,
-        # but the requirement says "images per slide of training".
-        # Since we can't easily render PPTX to image without external tools (libreoffice/powerpoint),
-        # we will extract the first image found on the slide as a thumbnail, or create a text placeholder.
+        # Get the generated image path or fallback
+        slide_image_rel_path = slide_images.get(i)
         
-        # improved image extraction: save shapes that are pictures
-        slide_image_path = None
-        for shape in slide.shapes:
-            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-                image = shape.image
-                image_bytes = image.blob
-                image_filename = f"slide_{i+1}_image.jpg"
-                image_path = images_dir / image_filename
-                with open(image_path, 'wb') as f:
-                    f.write(image_bytes)
-                slide_image_path = f"images/{image_filename}"
-                break # Just take the first one for now as preview
+        if not slide_image_rel_path:
+            # Fallback: Try to extract embedded image if it's the main content
+            image_filename = f"slide_{i+1}_embedded.jpg"
+            image_path = images_dir / image_filename
+            
+            for shape in slide.shapes:
+                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                    try:
+                        image = shape.image
+                        with open(image_path, 'wb') as f:
+                            f.write(image.blob)
+                        slide_image_rel_path = f"images/{image_filename}"
+                        break
+                    except Exception:
+                        pass
 
         content = "\n".join(slide_text)
         full_text.append(f"## {slide_title}\n\n{content}")
@@ -77,7 +144,7 @@ def process_pptx(file_path: Path, output_dir: Path) -> Dict[str, Any]:
             "title": slide_title,
             "level": 1,
             "concepts": extract_concepts(content),
-            "preview_image": slide_image_path
+            "preview_image": slide_image_rel_path
         })
 
     return {
