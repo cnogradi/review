@@ -1,0 +1,5 @@
+unstructured
+python-pptx
+boto3
+pdf2image
+pillow

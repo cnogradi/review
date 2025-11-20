@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { sampleMaterials } from './data/sampleMaterials';
+import { useState, useEffect } from 'react';
+import { TrainingMaterial } from './data/sampleMaterials';
+import { materialService } from './services/materialService';
 import MaterialSelector from './components/MaterialSelector';
 import OutlineComparison from './components/OutlineComparison';
 import ConceptSelector from './components/ConceptSelector';
@@ -13,10 +14,26 @@ interface SelectedConcept {
 }
 
 function App() {
+  const [materials, setMaterials] = useState<TrainingMaterial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedOutlineItems, setSelectedOutlineItems] = useState<string[]>([]);
   const [selectedConcepts, setSelectedConcepts] = useState<SelectedConcept[]>([]);
   const [currentStep, setCurrentStep] = useState<'select' | 'outline' | 'concepts' | 'preview'>('select');
+
+  useEffect(() => {
+    const loadMaterials = async () => {
+      try {
+        const data = await materialService.getMaterials();
+        setMaterials(data);
+      } catch (error) {
+        console.error('Failed to load materials', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMaterials();
+  }, []);
 
   const handleMaterialsSelected = (materialIds: string[]) => {
     setSelectedMaterials(materialIds);
@@ -40,7 +57,7 @@ function App() {
     setCurrentStep('select');
   };
 
-  const materials = sampleMaterials.filter(m => selectedMaterials.includes(m.id));
+  const activeMaterials = materials.filter(m => selectedMaterials.includes(m.id));
 
   return (
     <div className="app">
@@ -55,37 +72,43 @@ function App() {
       </header>
 
       <main className="app-main">
-        {currentStep === 'select' && (
-          <MaterialSelector
-            materials={sampleMaterials}
-            onMaterialsSelected={handleMaterialsSelected}
-          />
-        )}
+        {loading ? (
+          <div className="loading">Loading materials...</div>
+        ) : (
+          <>
+            {currentStep === 'select' && (
+              <MaterialSelector
+                materials={materials}
+                onMaterialsSelected={handleMaterialsSelected}
+              />
+            )}
 
-        {currentStep === 'outline' && (
-          <OutlineComparison
-            materials={materials}
-            onOutlineSelected={handleOutlineSelected}
-            onBack={() => setCurrentStep('select')}
-          />
-        )}
+            {currentStep === 'outline' && (
+              <OutlineComparison
+                materials={activeMaterials}
+                onOutlineSelected={handleOutlineSelected}
+                onBack={() => setCurrentStep('select')}
+              />
+            )}
 
-        {currentStep === 'concepts' && (
-          <ConceptSelector
-            materials={materials}
-            selectedOutlineItems={selectedOutlineItems}
-            onConceptsSelected={handleConceptsSelected}
-            onBack={() => setCurrentStep('outline')}
-          />
-        )}
+            {currentStep === 'concepts' && (
+              <ConceptSelector
+                materials={activeMaterials}
+                selectedOutlineItems={selectedOutlineItems}
+                onConceptsSelected={handleConceptsSelected}
+                onBack={() => setCurrentStep('outline')}
+              />
+            )}
 
-        {currentStep === 'preview' && (
-          <PreviewBuilder
-            materials={materials}
-            selectedConcepts={selectedConcepts}
-            onBack={() => setCurrentStep('concepts')}
-            onReset={resetWorkflow}
-          />
+            {currentStep === 'preview' && (
+              <PreviewBuilder
+                materials={activeMaterials}
+                selectedConcepts={selectedConcepts}
+                onBack={() => setCurrentStep('concepts')}
+                onReset={resetWorkflow}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
