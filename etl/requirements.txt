@@ -3,3 +3,6 @@ python-pptx
 boto3
 pdf2image
 pillow
+duckdb
+pandas
+pyarrow

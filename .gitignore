@@ -25,3 +25,6 @@ dist-ssr
 
 # python
 .venv/
+output/
+real_docs/
+test_docs/

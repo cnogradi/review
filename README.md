@@ -104,16 +104,38 @@ I have implemented the document processing pipeline and integrated it with the f
 #### Prerequisites
 1.  Install Python 3.8+.
 2.  **System Dependencies** (for slide generation):
-    -   **Linux**:
+    -   **Linux (Root Access)**:
         -   **LibreOffice**: `sudo apt-get install libreoffice`
         -   **Poppler**: `sudo apt-get install poppler-utils`
+    -   **Linux (Non-Root / Container)**:
+        -   **Poppler**: 
+            -   *Option A (Recommended)*: Install via Conda: `conda install -c conda-forge poppler`
+            -   *Option B (No Conda)*: Build from source or extract from package manager.
+                1.  Download latest source from [poppler.freedesktop.org](https://poppler.freedesktop.org/).
+                2.  Extract and build (requires cmake/gcc):
+                    ```bash
+                    mkdir build && cd build
+                    cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
+                    make && make install
+                    ```
+                3.  Add `$HOME/.local/bin` to PATH.
+        -   **LibreOffice**: 
+            1.  Download the AppImage from [libreoffice.org](https://www.libreoffice.org/download/appimage/).
+            2.  Make it executable: `chmod +x LibreOffice*.AppImage`.
+            3.  Add it to your PATH or alias `soffice` to point to the AppImage.
     -   **Windows**:
         -   **LibreOffice**: Install from [libreoffice.org](https://www.libreoffice.org/). Ensure `soffice.exe` is in your PATH or default install location.
         -   **Poppler**: Download binary release (e.g., from [github.com/oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows)), extract, and add the `bin` folder to your system PATH.
-3.  Install dependencies:
-    ```bash
-    pip install -r etl/requirements.txt
-    ```
+3.  Install Python dependencies:
+    -   **Using pip**:
+        ```bash
+        pip install -r etl/requirements.txt
+        ```
+    -   **Using uv**:
+        ```bash
+        uv pip install -r etl/requirements.txt
+        ```
+    *Note: `uv` manages Python packages but cannot install system dependencies like Poppler or LibreOffice.*
 
 #### Running the ETL Pipeline
 1.  **Generate Test Data** (Optional):
@@ -142,6 +164,33 @@ I have implemented the document processing pipeline and integrated it with the f
     - Create `.env.local` with `VITE_S3_BUCKET_URL=https://my-bucket.s3.amazonaws.com/prefix`
     - Run `npm run dev`.
 
-### Next Steps
 - Configure the actual S3 bucket and CORS settings.
 - Set up the `VITE_S3_BUCKET_URL` in the deployment environment.
+
+## Workbench Refactor (DuckDB + Parquet)
+
+The application has been refactored to use **DuckDB-WASM** with a Parquet-based data layer, enabling a 4-phase workflow: Ingest, Curate, Harmonize, Finalize.
+
+### Data Generation (Required)
+Before running the frontend, you must generate the mock Parquet data:
+
+1.  Install new dependencies:
+    ```bash
+    pip install -r etl/requirements.txt
+    ```
+2.  Run the generation script:
+    ```bash
+    python etl/generate_parquet.py
+    ```
+    This will create `files.parquet`, `slides.parquet`, and `conflicts.parquet` in `public/data`.
+
+### Running the Workbench
+1.  Start the dev server:
+    ```bash
+    npm run dev
+    ```
+2.  The app will load the Parquet files from `public/data` (default) or `VITE_S3_BUCKET_URL`.
+3.  Navigate through the 4 phases using the top navigation bar.
+
+### Troubleshooting
+- **SharedArrayBuffer**: DuckDB-WASM requires `SharedArrayBuffer`. If you see errors, ensure your server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. Vite dev server usually handles this, but check your deployment config.
